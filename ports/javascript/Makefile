@@ -6,24 +6,32 @@ QSTR_DEFS = qstrdefsport.h
 
 include $(TOP)/py/py.mk
 
-CC = emcc -g4
+CC = emcc -g4 $(JSFLAGS)
 LD = emcc -g4
 
 INC += -I.
 INC += -I$(TOP)
 INC += -I$(BUILD)
 
+EM_CACHE ?= ~/.emscripten_cache
+
+
+BOTH_CFLAGS := -s WASM=0
+
 CPP = clang -E
 
 ifdef EMSCRIPTEN
-    CPP += -isystem $(EMSCRIPTEN)/system/include/libc -cxx-isystem $(EMSCRIPTEN)/system/include/libcxx
+    CPP += -isystem $(EMSCRIPTEN)/system/include/libc -isystem $(EMSCRIPTEN)/system/include/libcxx -isystem $(EM_CACHE)/asmjs/ports-builds/sdl2/include
+    # Act like 'emcc'
+    CPP += -U__i386 -U__i386 -Ui386 -U__SSE -U__SSE_MATH -U__SSE2 -U__SSE2_MATH -U__MMX__ -U__SSE__ -U__SSE_MATH__ -U__SSE2__ -U__SSE2_MATH__
 endif
 
 CFLAGS = -m32 -Wall -Werror $(INC) -std=c99 $(COPT)
 LDFLAGS = -m32 -Wl,-Map=$@.map,--cref -Wl,--gc-sections
 
-CFLAGS += -O0 -DNDEBUG
+CFLAGS += -O0 -DNDEBUG -D__EMSCRIPTEN__
 CFLAGS += -fdata-sections -ffunction-sections
+CFLAGS += $(CFLAGS_MOD)
 
 SRC_LIB = $(addprefix lib/,\
 	utils/interrupt_char.c \
@@ -36,15 +44,29 @@ SRC_C = \
 	main.c \
 	mphalport.c \
 	modutime.c \
+	$(SRC_MOD)
 
-SRC_QSTR += $(SRC_C)
+LIB_SRC_C = $(addprefix lib/,\
+    lv_bindings/driver/SDL/SDL_monitor.c \
+    lv_bindings/driver/SDL/SDL_mouse.c \
+	lv_bindings/driver/SDL/modSDL.c \
+	$(LIB_SRC_C_EXTRA) \
+	timeutils/timeutils.c \
+	)
 
 OBJ = 
 OBJ = $(PY_O) 
 OBJ += $(addprefix $(BUILD)/, $(SRC_LIB:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(LIB_SRC_C:.c=.o))
 
-JSFLAGS = -O0 -s EXPORTED_FUNCTIONS="['_mp_js_init', '_mp_js_init_repl', '_mp_js_do_str', '_mp_js_process_char', '_mp_hal_get_interrupt_char', '_mp_keyboard_interrupt']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" --memory-init-file 0 --js-library library.js
+# List of sources for qstr extraction
+SRC_QSTR += $(SRC_C) $(LIB_SRC_C) dummy_header.h
+# Append any auto-generated sources that are needed by sources listed in
+# SRC_QSTR
+SRC_QSTR_AUTO_DEPS +=
+
+JSFLAGS = $(BOTH_CFLAGS) -s USE_SDL=2 -O0 -s EXPORTED_FUNCTIONS="['_mp_js_init', '_mp_js_init_repl', '_mp_js_do_str', '_mp_js_process_char', '_mp_hal_get_interrupt_char', '_mp_keyboard_interrupt']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" --memory-init-file 0 --js-library library.js
 
 all: $(BUILD)/micropython.js
 
