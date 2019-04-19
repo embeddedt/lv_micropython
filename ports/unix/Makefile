@@ -27,7 +27,7 @@ CFLAGS = $(INC) $(CWARN) -std=gnu99 -DUNIX $(CFLAGS_MOD) $(COPT) $(CFLAGS_EXTRA)
 
 # Debugging/Optimization
 ifdef DEBUG
-CFLAGS += -g
+CFLAGS += -g3
 COPT = -O0
 else
 COPT = -Os -fdata-sections -ffunction-sections -DNDEBUG
@@ -74,7 +74,7 @@ else
 # Use gcc syntax for map file
 LDFLAGS_ARCH = -Wl,-Map=$@.map,--cref -Wl,--gc-sections
 endif
-LDFLAGS = $(LDFLAGS_MOD) $(LDFLAGS_ARCH) -lm $(LDFLAGS_EXTRA)
+LDFLAGS = $(LDFLAGS_MOD) $(LDFLAGS_ARCH) -lm $(LDFLAGS_EXTRA) -lSDL2  
 
 # Flags to link with pthread library
 LIBPTHREAD = -lpthread
@@ -155,6 +155,10 @@ SRC_C = \
 	$(SRC_MOD)
 
 LIB_SRC_C = $(addprefix lib/,\
+    lv_bindings/driver/SDL/SDL_monitor.c \
+    lv_bindings/driver/SDL/SDL_mouse.c \
+	lv_bindings/driver/SDL/modSDL.c \
+	lv_bindings/driver/linux/modfb.c \
 	$(LIB_SRC_C_EXTRA) \
 	timeutils/timeutils.c \
 	)
