@@ -28,7 +28,7 @@
     <div>>>><input id='mp_input' type="text"/><button onclick='mp_execute_code();'>Execute</button></div>
 <!-- Create the canvas that the C++ code will draw into -->
     <canvas id="canvas" width="480" height="320" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
-    <script src="build/micropython.js"></script>
+    <script src="lvgl_mp.js"></script>
     <script>
       Module.canvas = (function() {
         console.log("Someone wants a canvas");
