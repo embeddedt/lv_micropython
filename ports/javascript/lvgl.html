@@ -1,13 +1,34 @@
 <!doctype html>
 <html>
   <head>
-    <script src="build/micropython.js"></script>
+    <style>
+       #mp_js_stdout {
+        width: 100%;
+        height: 200px;
+        margin: 0 auto;
+        margin-top: 10px;
+        border-left: 0px;
+        border-right: 0px;
+        padding-left: 0px;
+        padding-right: 0px;
+        display: block;
+        background-color: black;
+        color: white;
+        font-family: 'Lucida Console', Monaco, monospace;
+        outline: none;
+      }
+      body {
+        width: 100%;
+
+      }
+    </style>
   </head>
   <body>
-    <div id='mp_js_stdout'></div>
+    <textarea id="mp_js_stdout" rows="8"></textarea>
+    <div>>>><input id='mp_input' type="text"/><button onclick='mp_execute_code();'>Execute</button></div>
 <!-- Create the canvas that the C++ code will draw into -->
-    <canvas id="canvas" width="480" height="320" oncontextmenu="event.preventDefault()"></canvas>
-
+    <canvas id="canvas" width="480" height="320" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    <script src="build/micropython.js"></script>
     <script>
       Module.canvas = (function() {
         console.log("Someone wants a canvas");
@@ -19,7 +40,6 @@
 		"import lvgl as lv",
 		"lv.init()",
 		"import SDL",
-                "help(SDL)",
                 "SDL.init()",
 		/* Register SDL display driver. */
 		"disp_drv = lv.disp_drv_t()",
@@ -45,12 +65,48 @@
 		/* Load the screen */
 		"lv.scr_load(scr)"
 	];
-      mp_js_init(64 * 1024);
-      mp_js_stdout.addEventListener('print', function(e) {
-        document.write(e.data);
-      }, false);
-	for(var i = 0;i < lines.length;i++){
-	   mp_js_do_str(lines[i]);
+        function mp_execute_code() {
+		mp_js_do_str(document.getElementById("mp_input").value);
+		document.getElementById("mp_input").value = "";
+        }
+	window.onload = function() {
+
+		mp_js_stdout = document.getElementById('mp_js_stdout');
+	     mp_js_init(64 * 1024); 
+		document.getElementById("mp_input").addEventListener("keyup", function(event) {
+		  // Number 13 is the "Enter" key on the keyboard
+		  if (event.keyCode === 13) {
+		    // Cancel the default action, if needed
+		    event.preventDefault();
+		    // Trigger the button element with a click
+		    mp_execute_code();
+		  }
+		}); 
+	      mp_js_stdout.addEventListener('print', function(e) {
+			    text = e.data;
+			    if(text[0] == '\r')
+				return;
+			    // These replacements are necessary if you render to raw HTML
+			    //text = text.replace(/&/g, "&amp;");
+			    //text = text.replace(/</g, "&lt;");
+			    //text = text.replace(/>/g, "&gt;");
+			    //text = text.replace('\n', '<br>', 'g');
+			    console.log(text);
+			    if (mp_js_stdout) {
+			      mp_js_stdout.value += text;
+			      mp_js_stdout.scrollTop = mp_js_stdout.scrollHeight; // focus on bottom
+			    }
+		  
+	      }, false);
+		for(var i = 0;i < lines.length;i++){
+		   mp_js_do_str(lines[i]);
+		} 
+		var the_mp_handle_pending = Module.cwrap('mp_handle_pending', null);
+		function handle_pending() {
+			the_mp_handle_pending();
+			setTimeout(handle_pending, 10); // should call lv_task_handler() 
+		}
+		handle_pending(); 
 	}
 
 

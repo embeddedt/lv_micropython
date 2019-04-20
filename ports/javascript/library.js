@@ -31,7 +31,8 @@ mergeInto(LibraryManager.library, {
             if (typeof window === 'undefined') {
                 process.stdout.write(c);
             } else {
-                var mp_js_stdout = document.getElementById('mp_js_stdout');
+                if(mp_js_stdout === undefined || mp_js_stdout === null)
+			mp_js_stdout = document.getElementById('mp_js_stdout');
                 var print = new Event('print');
                 print.data = c;
                 mp_js_stdout.dispatchEvent(print);

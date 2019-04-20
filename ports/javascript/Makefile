@@ -21,7 +21,7 @@ BOTH_CFLAGS := -s WASM=0
 CPP = clang -E
 
 ifdef EMSCRIPTEN
-    CPP += -isystem $(EMSCRIPTEN)/system/include/libc -isystem $(EMSCRIPTEN)/system/include/libcxx -isystem $(EM_CACHE)/asmjs/ports-builds/sdl2/include
+    CPP += -isystem $(EMSCRIPTEN)/system/include/libc -isystem $(EMSCRIPTEN)/system/include/libcxx -isystem $(EM_CACHE)/asmjs/ports-builds/sdl2/include -isystem $(EMSCRIPTEN)/system/include
     # Act like 'emcc'
     CPP += -U__i386 -U__i386 -Ui386 -U__SSE -U__SSE_MATH -U__SSE2 -U__SSE2_MATH -U__MMX__ -U__SSE__ -U__SSE_MATH__ -U__SSE2__ -U__SSE2_MATH__
 endif
@@ -66,7 +66,7 @@ SRC_QSTR += $(SRC_C) $(LIB_SRC_C) dummy_header.h
 # SRC_QSTR
 SRC_QSTR_AUTO_DEPS +=
 
-JSFLAGS = $(BOTH_CFLAGS) -s USE_SDL=2 -O0 -s EXPORTED_FUNCTIONS="['_mp_js_init', '_mp_js_init_repl', '_mp_js_do_str', '_mp_js_process_char', '_mp_hal_get_interrupt_char', '_mp_keyboard_interrupt']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" --memory-init-file 0 --js-library library.js
+JSFLAGS = $(BOTH_CFLAGS) -s USE_SDL=2 -O0 -s EXPORTED_FUNCTIONS="['_mp_js_init', '_mp_handle_pending', '_mp_js_init_repl', '_mp_js_do_str', '_mp_js_process_char', '_mp_hal_get_interrupt_char', '_mp_keyboard_interrupt']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" --memory-init-file 0 --js-library library.js
 
 all: $(BUILD)/micropython.js
 
