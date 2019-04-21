@@ -19,23 +19,62 @@
       }
       body {
         width: 100%;
-
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
       }
+      #mp_input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      #canvas {
+        border: 4px black solid;
+        border-radius: 4px;
+      };
     </style>
   </head>
   <body>
-    <textarea id="mp_js_stdout" rows="8" readonly onkeypress="onKeyDown();"></textarea>
+    <textarea id="mp_js_stdout" rows="8" readonly></textarea>
+    <input id="mp_input" onkeyup="processInput();"/>
+    <div><button onclick="mp_js_process_char(3);">^C</button><button onclick="mp_js_process_char(4);">^D</button><button onclick="mp_js_process_char(5);">^E</button></div>
+    <br>
 <!-- Create the canvas that the C++ code will draw into -->
     <canvas id="canvas" width="480" height="320" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     <script src="lvgl_mp.js"></script>
     <script>
+	var store = {
+
+	    keyCount:0,
+	    commandCount:0,
+	    prevCommand:[],
+	    put : function(val) {        
+		this.commandCount++;
+		this.keyCount = this.commandCount;
+		this.prevCommand.push(val);        
+	    },
+	    get : function() {
+		
+		if(this.keyCount >= 1 && typeof this.prevCommand[this.keyCount-1] !== "undefined") {
+		    this.keyCount--;
+                    return this.prevCommand[this.keyCount];
+		} else if(typeof this.prevCommand[this.keyCount] !== "undefined")
+		    return this.prevCommand[this.keyCount];
+		else
+		    return "";
+	    }    
+
+	}
+      function sendText(text) {
+	var print = new Event('print');
+        print.data = text;
+        mp_js_stdout.dispatchEvent(print);
+      }
       Module.canvas = (function() {
         console.log("Someone wants a canvas");
         var canvas = document.getElementById('canvas');
         return canvas;
 	})(); 
 	var lines = [
-		"print('hello')",
 		"import lvgl as lv",
 		"lv.init()",
 		"import SDL",
@@ -47,14 +86,12 @@
 		"disp_drv.disp_fill = SDL.monitor_fill",
 		"disp_drv.disp_map = SDL.monitor_map",
 		"lv.disp_drv_register(disp_drv)",
-		"print('hello2')",
 		/*Regsiter SDL mouse driver*/
 		"indev_drv = lv.indev_drv_t()",
 		"lv.indev_drv_init(indev_drv)",
 		"indev_drv.type = lv.INDEV_TYPE.POINTER;",
 		"indev_drv.read = SDL.mouse_read;",
 		"lv.indev_drv_register(indev_drv);",
-		"print('hello3')",
 		/* Create a screen with a button and a label */
 		"scr = lv.obj()",
 		"btn = lv.btn(scr)",
@@ -64,14 +101,55 @@
 		/* Load the screen */
 		"lv.scr_load(scr)"
 	];
-        function onKeyDown()
-        {
-             var char = event.charCode || event.keyCode;
-             mp_js_process_char(char);
+        function processInput()
+        { 
+            var overrideChar = undefined;
+	    
+	   
+	    var ctrlDown = event.ctrlKey||event.metaKey; // Mac support
+	    // Check for ctrl+c, d, and e
+	    if (ctrlDown && event.keyCode==67) overrideChar = 3;
+	    else if (ctrlDown && event.keyCode==68) overrideChar = 4;
+	    else if (ctrlDown && event.keyCode==69) overrideChar = 5;
+
+	     if(overrideChar !== undefined) {
+                event.preventDefault();
+                mp_js_process_char(overrideChar);
+                return false;
+	     } 
+
+             if(event.keyCode == 13)
+             {
+                 event.preventDefault();
+                 for(var i = 0; i < mp_input.value.length; i++)
+                 {
+                     mp_js_process_char(mp_input.value.charCodeAt(i));
+                 }
+                 mp_js_process_char(13);
+	         if(mp_input.value.replace(/\s/g, '').length > 0)
+                     store.put(mp_input.value);
+                 mp_input.value = "";
+		 return false;
+             } else {
+		switch (event.key) {
+			case 'ArrowUp':
+			    mp_input.value = store.get();
+			    return false;
+			case 'ArrowDown':
+			    store.keyCount++;
+			    mp_input.value = store.get();
+			    // down arrow
+			    return false;
+	    	}
+                
+             }
+            
         }
 	window.onload = function() {
-
+                mp_input = document.getElementById("mp_input");
 		mp_js_stdout = document.getElementById('mp_js_stdout');
+	        mp_js_stdout.value = "";
+                mp_input.value = "";
 	     mp_js_init(64 * 1024); 
 	      mp_js_stdout.addEventListener('print', function(e) {
 			    text = e.data;

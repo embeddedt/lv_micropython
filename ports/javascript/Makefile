@@ -29,7 +29,9 @@ endif
 CFLAGS = -m32 -Wall -Werror $(INC) -std=c99 $(COPT)
 LDFLAGS = -m32 -Wl,-Map=$@.map,--cref -Wl,--gc-sections
 
-CFLAGS += -O0 -DNDEBUG -D__EMSCRIPTEN__
+OPTIM := -O2
+
+CFLAGS += $(OPTIM) -DNDEBUG -D__EMSCRIPTEN__
 CFLAGS += -fdata-sections -ffunction-sections
 CFLAGS += $(CFLAGS_MOD)
 
@@ -66,7 +68,7 @@ SRC_QSTR += $(SRC_C) $(LIB_SRC_C) dummy_header.h
 # SRC_QSTR
 SRC_QSTR_AUTO_DEPS +=
 
-JSFLAGS = $(BOTH_CFLAGS) -s USE_SDL=2 -O0 -s EXPORTED_FUNCTIONS="['_mp_js_init', '_mp_handle_pending', '_mp_js_init_repl', '_mp_js_do_str', '_mp_js_process_char', '_mp_hal_get_interrupt_char', '_mp_keyboard_interrupt']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" --memory-init-file 0 --js-library library.js
+JSFLAGS = $(BOTH_CFLAGS) -s USE_SDL=2 $(OPTIM) -s EXPORTED_FUNCTIONS="['_mp_js_init', '_mp_handle_pending', '_mp_js_init_repl', '_mp_js_do_str', '_mp_js_process_char', '_mp_hal_get_interrupt_char', '_mp_keyboard_interrupt']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap']" --memory-init-file 0 --js-library library.js
 
 all: $(BUILD)/micropython.js
 
