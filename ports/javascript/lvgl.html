@@ -24,8 +24,7 @@
     </style>
   </head>
   <body>
-    <textarea id="mp_js_stdout" rows="8"></textarea>
-    <div>>>><input id='mp_input' type="text"/><button onclick='mp_execute_code();'>Execute</button></div>
+    <textarea id="mp_js_stdout" rows="8" readonly onkeypress="onKeyDown();"></textarea>
 <!-- Create the canvas that the C++ code will draw into -->
     <canvas id="canvas" width="480" height="320" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     <script src="lvgl_mp.js"></script>
@@ -65,33 +64,19 @@
 		/* Load the screen */
 		"lv.scr_load(scr)"
 	];
-        function mp_execute_code() {
-		mp_js_do_str(document.getElementById("mp_input").value);
-		document.getElementById("mp_input").value = "";
+        function onKeyDown()
+        {
+             var char = event.charCode || event.keyCode;
+             mp_js_process_char(char);
         }
 	window.onload = function() {
 
 		mp_js_stdout = document.getElementById('mp_js_stdout');
 	     mp_js_init(64 * 1024); 
-		document.getElementById("mp_input").addEventListener("keyup", function(event) {
-		  // Number 13 is the "Enter" key on the keyboard
-		  if (event.keyCode === 13) {
-		    // Cancel the default action, if needed
-		    event.preventDefault();
-		    // Trigger the button element with a click
-		    mp_execute_code();
-		  }
-		}); 
 	      mp_js_stdout.addEventListener('print', function(e) {
 			    text = e.data;
 			    if(text[0] == '\r')
 				return;
-			    // These replacements are necessary if you render to raw HTML
-			    //text = text.replace(/&/g, "&amp;");
-			    //text = text.replace(/</g, "&lt;");
-			    //text = text.replace(/>/g, "&gt;");
-			    //text = text.replace('\n', '<br>', 'g');
-			    console.log(text);
 			    if (mp_js_stdout) {
 			      mp_js_stdout.value += text;
 			      mp_js_stdout.scrollTop = mp_js_stdout.scrollHeight; // focus on bottom
@@ -106,7 +91,8 @@
 			the_mp_handle_pending();
 			setTimeout(handle_pending, 10); // should call lv_task_handler() 
 		}
-		handle_pending(); 
+		handle_pending();
+                mp_js_init_repl();
 	}
 
 
