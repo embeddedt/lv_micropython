@@ -92,8 +92,9 @@
 			the_mp_handle_pending();
 			setTimeout(handle_pending, 10); // should call lv_task_handler() 
 		}
-		handle_pending();
+		
                 mp_js_init_repl();
+				handle_pending();
 	}
 
 
