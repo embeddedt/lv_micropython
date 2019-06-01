@@ -84,21 +84,16 @@
 				}
 				
 			});
-		
+		for(var i = 0;i < lines.length;i++){
+		   mp_js_do_str(lines[i]);
+		} 
 		var the_mp_handle_pending = Module.cwrap('mp_handle_pending', null);
 		function handle_pending() {
 			the_mp_handle_pending();
 			setTimeout(handle_pending, 10); // should call lv_task_handler() 
 		}
-		
-                mp_js_init_repl();
 		handle_pending();
-		for(var i = 0;i < lines.length;i++){
-			for(var j = 0; j < lines[i].length; j++) {
-				mp_js_process_char(lines[i].charCodeAt(j));
-			}
-			mp_js_process_char(13);
-		} 
+                mp_js_init_repl();
 	}
 
 
