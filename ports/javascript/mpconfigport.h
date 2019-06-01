@@ -226,3 +226,4 @@ typedef long mp_off_t;
 #define MICROPY_PORT_ROOT_POINTERS \
     LV_ROOTS \
     const char *readline_hist[8];
+
