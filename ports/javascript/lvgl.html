@@ -77,7 +77,7 @@
 			    term.write(text);
 		  
 	      }, false);
-			term.on('key', function(key, e) {
+			term.on('data', function(key, e) {
 				console.log(key);
 				for(var i = 0; i < key.length; i++) {
 					mp_js_process_char(key.charCodeAt(i));
